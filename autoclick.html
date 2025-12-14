@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Auto Click Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #fff;
+            text-align: center;
+            padding-top: 40px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .box {
+            background: #222;
+            width: 320px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>🪙 AUTO CLICK GAME</h2>
+    <p>Vàng: <span id="gold">0</span></p>
+    <p>Auto / lần: <span id="auto">0</span></p>
+    <p>Tốc độ: <span id="speed">1</span> giây</p>
+    <p>💰 Vàng / giây: <span id="gps">0</span></p>
+
+    <button onclick="clickGold()">Click tay (+1)</button><br>
+    <button onclick="buyAuto()">Mua Auto (10 vàng)</button><br>
+    <button onclick="upgradeSpeed()">Nâng tốc độ (50 vàng)</button>
+</div>
+
+<script>
+    let gold = Number(localStorage.getItem("gold")) || 0;
+    let autoClick = Number(localStorage.getItem("autoClick")) || 0;
+    let speed = Number(localStorage.getItem("speed")) || 1000;
+
+    function updateUI() {
+        document.getElementById("gold").innerText = gold;
+        document.getElementById("auto").innerText = autoClick;
+        document.getElementById("speed").innerText = (speed / 1000).toFixed(2);
+        document.getElementById("gps").innerText = ((autoClick * 1000) / speed).toFixed(2);
+    }
+
+    function clickGold() {
+        gold++;
+        saveGame();
+        updateUI();
+    }
+
+    function buyAuto() {
+        if (gold >= 10) {
+            gold -= 10;
+            autoClick++;
+            saveGame();
+            updateUI();
+        } else {
+            alert("Không đủ vàng!");
+        }
+    }
+
+    function upgradeSpeed() {
+        if (gold >= 50 && speed > 100) {
+            gold -= 50;
+            speed /= 2;
+            saveGame();
+            updateUI();
+        } else {
+            alert("Không đủ vàng hoặc đã tối đa!");
+        }
+    }
+
+    function saveGame() {
+        localStorage.setItem("gold", gold);
+        localStorage.setItem("autoClick", autoClick);
+        localStorage.setItem("speed", speed);
+    }
+
+    setInterval(() => {
+        gold += autoClick;
+        saveGame();
+        updateUI();
+    }, speed);
+
+    updateUI();
+</script>
+
+</body>
+</html>
