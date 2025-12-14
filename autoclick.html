@@ -5,76 +5,43 @@
 <title>Auto Click Game</title>
 <style>
 body {
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#141e30,#243b55);
+    font-family: Arial;
     color: white;
     margin: 0;
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
 }
-
 .game {
-    width: 360px;
+    width: 380px;
     background: rgba(0,0,0,0.5);
-    border-radius: 15px;
     padding: 20px;
-    box-shadow: 0 0 25px rgba(0,0,0,0.7);
+    border-radius: 15px;
 }
-
-h1 {
-    text-align: center;
-    margin-bottom: 10px;
-}
-
-.stats p {
-    margin: 5px 0;
-    font-size: 15px;
-}
-
-.progress {
-    background: #333;
-    border-radius: 10px;
-    overflow: hidden;
-    height: 18px;
-    margin: 10px 0;
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, gold, orange);
-    transition: width 0.3s;
-}
-
+h1 { text-align: center; }
+.stats p { margin: 5px 0; }
 button {
     width: 100%;
     padding: 10px;
-    margin-top: 8px;
+    margin-top: 6px;
     border: none;
     border-radius: 8px;
-    font-size: 15px;
-    cursor: pointer;
-    background: #00c6ff;
-    color: black;
     font-weight: bold;
+    cursor: pointer;
 }
-
-button:hover {
-    background: #00a3d6;
+.main { background:#00c6ff; }
+.shop { background:#00ffa2; }
+.skill { background:#ff9800; }
+.reset { background:#ff5252; color:white; }
+.notice {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #ffd54f;
 }
-
-.shop {
-    margin-top: 12px;
-    border-top: 1px solid rgba(255,255,255,0.2);
-    padding-top: 10px;
-}
-
-.small {
-    font-size: 12px;
-    opacity: 0.8;
-    text-align: center;
+.ach {
+    font-size: 13px;
     margin-top: 8px;
 }
 </style>
@@ -82,94 +49,121 @@ button:hover {
 
 <body>
 <div class="game">
-    <h1>🪙 Auto Click</h1>
+<h1>🪙 Auto Click</h1>
 
-    <div class="stats">
-        <p>Vàng: <b><span id="gold">0</span></b></p>
-        <p>💰 Vàng / giây: <span id="gps">0</span></p>
-        <p>🎮 Level: <span id="level">1</span></p>
-        <p>🏆 Best Gold: <span id="best">0</span></p>
-    </div>
+<div class="stats">
+<p>Vàng: <b><span id="gold">0</span></b></p>
+<p>Auto / giây: <span id="gps">0</span></p>
+<p>Level: <span id="level">1</span></p>
+<p>Tốc độ: <span id="speed">1</span>s</p>
+</div>
 
-    <div class="progress">
-        <div class="progress-bar" id="bar"></div>
-    </div>
+<button class="main" onclick="clickGold()">Click tay (+1)</button>
 
-    <button onclick="clickGold()">Click tay (+1)</button>
+<button class="shop" onclick="buyAuto(1,10)">🤖 Auto Basic (+1) – 10</button>
+<button class="shop" onclick="buyAuto(5,50)">⚡ Auto Pro (+5) – 50</button>
 
-    <div class="shop">
-        <button onclick="buyAuto(1, 10)">🤖 Auto Basic (+1) – 10 vàng</button>
-        <button onclick="buyAuto(5, 50)">⚡ Auto Pro (+5) – 50 vàng</button>
-        <button onclick="buyAuto(20, 200)">🚀 Auto Mega (+20) – 200 vàng</button>
-    </div>
+<button class="shop" onclick="upgradeSpeed()">⏱ Nâng tốc độ – 100</button>
 
-    <div class="small">
-        Auto Save • Reload không mất dữ liệu
-    </div>
+<button class="skill" onclick="doubleGold()">🔥 X2 vàng (10s)</button>
+
+<button class="reset" onclick="resetGame()">♻ Reset game</button>
+
+<div class="ach">
+🏆 Thành tựu:
+<ul>
+<li id="a100">❌ 100 vàng</li>
+<li id="a500">❌ 500 vàng</li>
+<li id="a1000">❌ 1000 vàng</li>
+</ul>
+</div>
+
+<div class="notice" id="notice"></div>
 </div>
 
 <script>
 let gold = Number(localStorage.getItem("gold")) || 0;
 let autoClick = Number(localStorage.getItem("autoClick")) || 0;
 let totalGold = Number(localStorage.getItem("totalGold")) || 0;
-let bestGold = Number(localStorage.getItem("bestGold")) || 0;
-let speed = 1000;
+let speed = Number(localStorage.getItem("speed")) || 1000;
 let interval = null;
+let doubleActive = false;
 
-function saveGame() {
-    localStorage.setItem("gold", gold);
-    localStorage.setItem("autoClick", autoClick);
-    localStorage.setItem("totalGold", totalGold);
-    localStorage.setItem("bestGold", bestGold);
+function save() {
+    localStorage.setItem("gold",gold);
+    localStorage.setItem("autoClick",autoClick);
+    localStorage.setItem("totalGold",totalGold);
+    localStorage.setItem("speed",speed);
 }
 
-function level() {
-    return Math.floor(totalGold / 100) + 1;
+function notify(msg){
+    document.getElementById("notice").innerText = msg;
+    setTimeout(()=>{document.getElementById("notice").innerText=""},2000);
 }
 
-function updateUI() {
+function level(){ return Math.floor(totalGold/200)+1; }
+
+function update(){
     document.getElementById("gold").innerText = gold;
-    document.getElementById("gps").innerText = autoClick;
+    document.getElementById("gps").innerText = autoClick * (1000/speed);
     document.getElementById("level").innerText = level();
-    document.getElementById("best").innerText = bestGold;
+    document.getElementById("speed").innerText = (speed/1000).toFixed(2);
 
-    let percent = Math.min((gold / 1000) * 100, 100);
-    document.getElementById("bar").style.width = percent + "%";
+    if(totalGold>=100) document.getElementById("a100").innerText="✅ 100 vàng";
+    if(totalGold>=500) document.getElementById("a500").innerText="✅ 500 vàng";
+    if(totalGold>=1000) document.getElementById("a1000").innerText="✅ 1000 vàng";
 }
 
-function startAuto() {
-    if (interval) clearInterval(interval);
-    interval = setInterval(() => {
-        gold += autoClick;
-        totalGold += autoClick;
-        if (gold > bestGold) bestGold = gold;
-        saveGame();
-        updateUI();
-    }, speed);
+function startAuto(){
+    if(interval) clearInterval(interval);
+    interval = setInterval(()=>{
+        let gain = autoClick;
+        if(doubleActive) gain*=2;
+        gold+=gain;
+        totalGold+=gain;
+        save();
+        update();
+    },speed);
 }
 
-function clickGold() {
-    gold++;
-    totalGold++;
-    if (gold > bestGold) bestGold = gold;
-    saveGame();
-    updateUI();
+function clickGold(){
+    gold++; totalGold++;
+    save(); update();
 }
 
-function buyAuto(power, cost) {
-    if (gold >= cost) {
-        gold -= cost;
-        autoClick += power;
-        saveGame();
-        startAuto();
-        updateUI();
-    } else {
-        alert("Không đủ vàng!");
+function buyAuto(p,c){
+    if(gold>=c){
+        gold-=c; autoClick+=p;
+        notify("Mua thành công!");
+        save(); startAuto(); update();
+    } else notify("Không đủ vàng!");
+}
+
+function upgradeSpeed(){
+    if(gold>=100 && speed>250){
+        gold-=100;
+        speed/=2;
+        notify("Tốc độ tăng!");
+        save(); startAuto(); update();
+    } else notify("Không thể nâng!");
+}
+
+function doubleGold(){
+    if(doubleActive) return notify("Skill đang hoạt động!");
+    doubleActive=true;
+    notify("X2 vàng trong 10s!");
+    setTimeout(()=>{doubleActive=false; notify("Skill kết thúc");},10000);
+}
+
+function resetGame(){
+    if(confirm("Reset toàn bộ game?")){
+        localStorage.clear();
+        location.reload();
     }
 }
 
 startAuto();
-updateUI();
+update();
 </script>
 </body>
 </html>
